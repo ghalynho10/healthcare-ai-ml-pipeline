@@ -12,7 +12,7 @@ Built to practice each layer a real healthcare AI system needs, in order: loadin
 
 - Raw data starts as three CSV files in `data/`: `patients.csv` (5,000 rows), `visits.csv` (25,000 rows), and `billing.csv` (25,000 rows).
 - Phase 1 (`notebooks/Phase1-SQL.ipynb`) loads those CSVs into a SQLite database (`db/hospital.db`), then runs operational and financial analytics queries and data quality checks against it. It exports a joined, analysis ready table to `outputs/model_table.csv`.
-- Phase 2 (`notebooks/Phase2_EDA.ipynb`) takes that exported table (25,000 rows, 20 columns) and works through missing value analysis, business logic validation, distribution analysis, and outlier detection (boxplot and IQR methods), then checks feature correlation against two target variables: `risk_score` (Low, Medium, High) and `claim_status` (Paid, Pending, Rejected). Its own output is meant to feed a Phase 3 modeling step.
+- Phase 2 (`notebooks/Phase2_EDA.ipynb`) takes that exported table (25,000 rows, 20 columns) and works through seven steps: missing value analysis, business logic validation, distribution analysis, outlier detection (boxplot and IQR methods), feature correlation against two encoded target variables (`risk_score`: Low, Medium, High; `claim_status`: Paid, Pending, Rejected), a class imbalance and class collapse demo (a naive majority class baseline compared against logistic regression with and without `class_weight="balanced"`), and feature engineering (seven new columns, including per patient visit frequency and average length of stay, provider rejection rate, time based features, and a high cost visit flag). It ends by writing the enriched table back to `outputs/model_table.csv`, ready for Phase 3 modeling.
 - `requirements.txt` lays out the intended stack for the phases beyond EDA: scikit-learn, XGBoost, and imbalanced-learn for modeling; MLflow for experiment tracking; DVC for data versioning; FastAPI for serving; Evidently for monitoring; Gradio for a simple UI. The directories meant to hold this work (`src/`, `api/`, `models/`, `report/`, `tests/`) exist but are currently empty; none of this is implemented yet.
 
 ## Where things live
@@ -25,9 +25,9 @@ Built to practice each layer a real healthcare AI system needs, in order: loadin
 
 ## Current state
 
-Done: Phase 1 (SQL analytics layer: database build, operational and financial queries, data quality checks, export to `model_table.csv`) and the distribution analysis and outlier detection steps of Phase 2 EDA.
-In progress: Phase 2 EDA, specifically the feature correlation step against `risk_score` and `claim_status`.
-Not yet started: feature engineering output for Phase 3, model training, experiment tracking, the API, monitoring, and the UI. There is no `docs/scope/` or `docs/specs/` in this project yet, so this section is derived from the notebooks and directory layout rather than tracked scope entries; treat it as a snapshot, not a tracked status.
+Done: Phase 1 (SQL analytics layer: database build, operational and financial queries, data quality checks, export to `model_table.csv`) and all of Phase 2 EDA (missing value and business logic checks, distribution analysis, outlier detection, feature correlation, the class imbalance and class collapse demo, and feature engineering), which now writes an enriched `model_table.csv` back out.
+In progress: nothing active right now; Phase 2's notebook work is finished and its output is the handoff point for Phase 3.
+Not yet started: Phase 3 model training, experiment tracking, the API, monitoring, and the UI. There is no `docs/scope/` or `docs/specs/` in this project yet, so this section is derived from the notebooks and directory layout rather than tracked scope entries; treat it as a snapshot, not a tracked status.
 
 ---
 *Last updated: 2026-07-29 · Reference document, kept current by `/overview update`. Specs in `docs/specs/` are the source of truth for any decision.*
