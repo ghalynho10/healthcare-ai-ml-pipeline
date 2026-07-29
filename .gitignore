@@ -19,3 +19,11 @@ db/*.db
 outputs/
 models/*.pkl
 models/*.joblib
+
+# AI agent skills
+.agent
+.agents
+.augment
+.claude
+
+skills-lock.json
