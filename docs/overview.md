@@ -2,32 +2,56 @@
 
 ## What it is
 
-A learning project that builds, phase by phase, the kind of data pipeline a healthcare organization might use to predict patient risk and insurance claim outcomes. It takes raw hospital records (patients, visits, billing) and works them through storage, analysis, and, eventually, a trained model that can be queried through an API. It is a personal project aimed at practicing the full life cycle of a healthcare AI system, not a system currently used by any organization.
+A learning project that builds, phase by phase, the kind of data pipeline a healthcare organization might use to predict patient risk and insurance claim outcomes. It takes raw hospital records, patients, visits, and billing, then works them through storage, analysis, and eventually a trained model that can be queried through an API. It is a personal project for practicing the full life cycle of a healthcare AI system. It is not a system currently used by any organization.
 
 ## Why it exists
 
-Built to practice each layer a real healthcare AI system needs, in order: loading raw data into a proper database, running operational and financial analytics on it, exploring the data with a modeler's eye before touching any model, and, in later phases not yet built, training, tracking, and serving a model. The reasoning behind this specific phase order is not recorded in any spec; it is read from the structure of the project notebooks themselves.
+The project exists to practice each layer a real healthcare AI system needs, in order. The current work starts with loading raw data into a database, running operational and financial analytics, and exploring the data with a modeler's eye before model training begins. Later phases are intended to add training, experiment tracking, serving, monitoring, and a simple user interface. The reasoning behind this exact phase order is not recorded in a spec, it is read from the structure of the notebooks.
 
 ## How it is built
 
-- Raw data starts as three CSV files in `data/`: `patients.csv` (5,000 rows), `visits.csv` (25,000 rows), and `billing.csv` (25,000 rows).
-- Phase 1 (`notebooks/Phase1-SQL.ipynb`) loads those CSVs into a SQLite database (`db/hospital.db`), then runs operational and financial analytics queries and data quality checks against it. It exports a joined, analysis ready table to `outputs/model_table.csv`.
-- Phase 2 (`notebooks/Phase2_EDA.ipynb`) takes that exported table (25,000 rows, 20 columns) and works through seven steps: missing value analysis, business logic validation, distribution analysis, outlier detection (boxplot and IQR methods), feature correlation against two encoded target variables (`risk_score`: Low, Medium, High; `claim_status`: Paid, Pending, Rejected), a class imbalance and class collapse demo (a naive majority class baseline compared against logistic regression with and without `class_weight="balanced"`), and feature engineering (seven new columns, including per patient visit frequency and average length of stay, provider rejection rate, time based features, and a high cost visit flag). It ends by writing the enriched table back to `outputs/model_table.csv`, ready for Phase 3 modeling.
-- `requirements.txt` lays out the intended stack for the phases beyond EDA: scikit-learn, XGBoost, and imbalanced-learn for modeling; MLflow for experiment tracking; DVC for data versioning; FastAPI for serving; Evidently for monitoring; Gradio for a simple UI. The directories meant to hold this work (`src/`, `api/`, `models/`, `report/`, `tests/`) exist but are currently empty; none of this is implemented yet.
+Raw data starts as three CSV files in `data/`: `patients.csv` with 5,000 rows, `visits.csv` with 25,000 rows, and `billing.csv` with 25,000 rows.
+
+Phase 1 lives in `notebooks/Phase1-SQL.ipynb`. It loads those CSVs into a SQLite database at `db/hospital.db`, then runs operational analytics, financial analytics, and data quality checks. It exports a joined table to `outputs/model_table.csv`.
+
+Phase 2 lives in `notebooks/Phase2_EDA.ipynb`. It takes `outputs/model_table.csv`, which starts with 25,000 rows and 20 columns, then works through missing value analysis, business logic validation, distribution analysis, outlier detection, feature correlation, a class imbalance and class collapse demo, and feature engineering. The notebook compares a naive majority class baseline with logistic regression with and without `class_weight="balanced"`. It adds seven new columns, including visit frequency, average length of stay per patient, provider rejection rate, time based visit features, and a high cost visit flag. It writes the enriched table back to `outputs/model_table.csv`, ready for Phase 3 modeling.
+
+`requirements.txt` records the intended stack for later phases. It includes scikit-learn, XGBoost, and imbalanced-learn for modeling, MLflow for experiment tracking, DVC for data versioning, FastAPI for serving, Evidently for monitoring, and Gradio for a simple user interface. The directories for that later work exist, but most of that code is not implemented yet.
+
+## Main surfaces
+
+`notebooks/Phase1-SQL.ipynb` is the SQL analytics surface. Run it to build the SQLite database, inspect operational and financial questions, run data quality checks, and export the first modeling table.
+
+`notebooks/Phase2_EDA.ipynb` is the exploratory analysis surface. Run it to inspect data quality, distributions, outliers, target relationships, class imbalance behavior, and engineered features.
+
+`outputs/model_table.csv` is the handoff artifact between phases. Phase 1 creates it, Phase 2 enriches it, and Phase 3 is expected to train from it.
+
+## Decisions that shaped it
+
+The project is organized as phases in notebooks first. The reasoning is not recorded in a spec, but the notebooks show the intended learning path from SQL analytics to exploratory analysis to modeling.
+
+The pipeline uses CSV source data, then SQLite, then a flat modeling table. The reasoning is not recorded in a spec, but the file layout and Phase 1 notebook make this the current data flow.
+
+The later stack is declared before it is implemented. The reasoning is not recorded in a spec, but `requirements.txt` shows the intended direction: model training, tracking, data versioning, serving, monitoring, and a simple interface.
 
 ## Where things live
 
-- `data/` — the three raw source CSVs.
-- `db/` — the SQLite database built from those CSVs (not committed to git; generated by Phase 1).
-- `outputs/` — generated tables, including `model_table.csv`, the handoff point between phases.
-- `notebooks/` — the phased work itself, currently `Phase1-SQL.ipynb` (SQL analytics) and `Phase2_EDA.ipynb` (exploratory analysis).
-- `src/`, `api/`, `models/`, `report/`, `tests/` — scaffolded, empty directories reserved for feature engineering and modeling code, an API layer, saved models, reporting, and tests, once those phases start.
+`data/` holds the three raw source CSV files.
+
+`db/` holds the SQLite database generated by Phase 1. The database is not committed to git.
+
+`outputs/` holds generated tables, including `model_table.csv`, the handoff point between phases.
+
+`notebooks/` holds the phased work itself. It currently contains `Phase1-SQL.ipynb` for SQL analytics and `Phase2_EDA.ipynb` for exploratory analysis.
+
+`src/`, `api/`, `models/`, `report/`, and `tests/` are scaffolded directories reserved for feature engineering code, modeling code, an API layer, saved models, reporting, and tests once those phases start.
 
 ## Current state
 
-Done: Phase 1 (SQL analytics layer: database build, operational and financial queries, data quality checks, export to `model_table.csv`) and all of Phase 2 EDA (missing value and business logic checks, distribution analysis, outlier detection, feature correlation, the class imbalance and class collapse demo, and feature engineering), which now writes an enriched `model_table.csv` back out.
-In progress: nothing active right now; Phase 2's notebook work is finished and its output is the handoff point for Phase 3.
-Not yet started: Phase 3 model training, experiment tracking, the API, monitoring, and the UI. There is no `docs/scope/` or `docs/specs/` in this project yet, so this section is derived from the notebooks and directory layout rather than tracked scope entries; treat it as a snapshot, not a tracked status.
+Phase 1 is done. It builds the SQL analytics layer, creates the database, runs operational and financial queries, checks data quality, and exports `model_table.csv`.
 
----
-*Last updated: 2026-07-29 · Reference document, kept current by `/overview update`. Specs in `docs/specs/` are the source of truth for any decision.*
+Phase 2 is done. It covers missing value checks, business logic checks, distribution analysis, outlier detection, feature correlation, class imbalance exploration, and feature engineering. It now writes an enriched `model_table.csv` with 25,000 rows and 30 columns.
+
+There is nothing active in progress in the tracked files right now. Phase 3 model training, experiment tracking, the API, monitoring, and the user interface have not started yet. There is no `docs/scope/` or `docs/specs/` in this project yet, so this state is derived from the notebooks and directory layout rather than tracked scope entries.
+
+*Last updated: 2026-07-29, Reference document, kept current by `/overview update`. Specs in `docs/specs/` are the source of truth for any decision.*
