@@ -27,3 +27,4 @@ models/*.joblib
 .claude
 
 skills-lock.json
+ok.ipynb
